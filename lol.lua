@@ -30,7 +30,7 @@ local sameOrderCount = 0
 
 -- Auto-rejoin setup
 local function queueRejoin()
-    local scriptUrl = "https://raw.githubusercontent.com/abeljalos69/xd/refs/heads/main/lol.lua" -- Replace with your script URL
+    local scriptUrl = "https://raw.githubusercontent.com/abeljalos69/xd/refs/heads/main/lol.lua?tick="..tostring(tick())
     
     -- Save current earnings to persist through rejoin
     local savedData = {
