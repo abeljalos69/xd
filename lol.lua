@@ -16,7 +16,7 @@ local Remote = ReplicatedStorage.Remote.RestaurantJob
 
 -- Configuration
 local REJOIN_AFTER_SAME_ORDERS = 3
-local REJOIN_POSITION = Vector3.new(18, -10, -1972)
+local REJOIN_POSITION = Vector3.new(17, -107, -1971)
 local REJOIN_WAIT_TIME = 3
 local JOB_NAME = "The Twist Worker"
 
@@ -39,37 +39,57 @@ local function queueRejoin()
         startTime = startTime
     }
     
-    -- Create rejoin script
     local rejoinScript = [[
-        -- local savedData = ]]..game:GetService("HttpService"):JSONEncode(savedData)..[[
-        
         -- Wait for game to load
         if not game:IsLoaded() then game.Loaded:Wait() end
 
-        -- prevent reset on clicking play
+        -- Prevent reset on clicking play
         game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("SpawnChar"):FireServer()
         
-        -- Teleport to position
+        -- Teleport to position continuously for the wait time
         local plr = game:GetService("Players").LocalPlayer
-        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
-        end
+        local startTime = tick()
+        local endTime = startTime + ]]..REJOIN_WAIT_TIME..[[
         
-        -- Wait 3 seconds
-        wait(]]..REJOIN_WAIT_TIME..[[)
-
-        -- Teleport to position
-        local plr = game:GetService("Players").LocalPlayer
-        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y.." - 97, "..REJOIN_POSITION.Z..[[)
+        local teleportLoop = coroutine.create(function()
+            while tick() < endTime do
+                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    plr.Character.HumanoidRootPart.Anchored = true
+                    plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
+                end
+                wait(0.1)
+            end
+        end)
+        coroutine.resume(teleportLoop)
+        
+        -- Wait for the specified time
+        while tick() < endTime do
+            wait(0.1)
         end
+        plr.Character.HumanoidRootPart.Anchored = false
+        plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
         
         -- Change job
         local args = {"]]..JOB_NAME..[["}
         game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
         
+        task.wait(1)
+
         -- Load main script
         loadstring(game:HttpGet("]]..scriptUrl..[["))()
+
+        task.wait(1)
+
+        -- jump to hopefully register as working ingame
+        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+            plr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+
+        -- toggle auto-farm trhru its actual own function lawl
+        local mainScript = getgenv().TwistAutoFarmMainScript
+        if mainScript and mainScript.toggleAutoFarm then
+            mainScript.toggleAutoFarm()
+        end
     ]]
     
     -- Queue teleport with script
@@ -483,8 +503,13 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- Initial State
-if not getgenv().AutoFarm then getgenv().AutoFarm = false end
+getgenv().AutoFarm = false
 updateUI()
+
+-- expose the toggle to the global env
+getgenv().TwistAutoFarmMainScript = {
+    toggleAutoFarm = toggleAutoFarm
+}
 
 -- Start monitoring cash changes
 coroutine.wrap(monitorCashChanges)()
