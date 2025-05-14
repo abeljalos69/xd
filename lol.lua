@@ -54,6 +54,12 @@ local function queueRejoin()
         
         -- Wait 3 seconds
         wait(]]..REJOIN_WAIT_TIME..[[)
+
+        -- Teleport to position
+        local plr = game:GetService("Players").LocalPlayer
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y.." - 97, "..REJOIN_POSITION.Z..[[)
+        end
         
         -- Change job
         local args = {"]]..JOB_NAME..[["}
@@ -64,7 +70,8 @@ local function queueRejoin()
     ]]
     
     -- Queue teleport with script
-    TeleportService:Teleport(game.PlaceId, plr, rejoinScript)
+    queue_on_teleport(rejoinScript)
+    TeleportService:Teleport(game.PlaceId, plr)
 end
 
 -- UI Creation
