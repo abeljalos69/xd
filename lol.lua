@@ -41,10 +41,13 @@ local function queueRejoin()
     
     -- Create rejoin script
     local rejoinScript = [[
-        local savedData = ]]..game:GetService("HttpService"):JSONEncode(savedData)..[[
+        -- local savedData = ]]..game:GetService("HttpService"):JSONEncode(savedData)..[[
         
         -- Wait for game to load
         if not game:IsLoaded() then game.Loaded:Wait() end
+
+        -- prevent reset on clicking play
+        game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("SpawnChar"):FireServer()
         
         -- Teleport to position
         local plr = game:GetService("Players").LocalPlayer
@@ -480,7 +483,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- Initial State
-getgenv().AutoFarm = false
+if not getgenv().AutoFarm then getgenv().AutoFarm = false end
 updateUI()
 
 -- Start monitoring cash changes
