@@ -49,7 +49,6 @@ local function serverhop()
     end
 end
 
--- Auto-rejoin setup
 local function queueRejoin()
     local scriptUrl = "https://raw.githubusercontent.com/abeljalos69/xd/refs/heads/main/lol.lua?tick="..tostring(tick())
     
@@ -59,10 +58,17 @@ local function queueRejoin()
         ordersCompleted = ordersCompleted,
         startTime = startTime
     }
+
+	local oldjobid = game.JobId
     
     local rejoinScript = [[
         -- Wait for game to load
         if not game:IsLoaded() then game.Loaded:Wait() end
+
+		local oldandnewjobid = "Old -> ]]..tostring(oldjobid)..[[\nNew -> "..game.JobId
+        print(oldandnewjobid)
+        print("Setting new & old jobid to clipboard..")
+        setclipboard(oldandnewjobid)
 
         -- Prevent reset on clicking play
         game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("SpawnChar"):FireServer()
