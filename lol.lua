@@ -84,7 +84,7 @@ local function queueRejoin()
 
 		print('[/] Changed job to Farnsworths Worker')
 
-		task.wait(2)
+		task.wait(8)
 
 		plr.Character.HumanoidRootPart.CFrame = CFrame.new(86, 30, -1942)
 
@@ -133,6 +133,8 @@ local function queueRejoin()
         if mainScript and mainScript.toggleAutoFarm then
             mainScript.toggleAutoFarm()
         end
+
+		print("[/] Rejoin procedure complete.")
     ]]
     
     -- Queue teleport with script
