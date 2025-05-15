@@ -97,6 +97,9 @@ local function queueRejoin()
         
 		task.wait(3)
 
+        -- wait for cahracter to load
+        local character = plr.Character or plr.CharacterAdded:Wait()
+
 		local startTime = tick()
         local endTime = startTime + ]]..REJOIN_WAIT_TIME..[[
         
