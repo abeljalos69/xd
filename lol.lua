@@ -65,79 +65,117 @@ local function queueRejoin()
         -- Wait for game to load
         if not game:IsLoaded() then game.Loaded:Wait() end
 
-		local oldandnewjobid = "Old -> ]]..tostring(oldjobid)..[[\nNew -> "..game.JobId
+        local oldandnewjobid = "Old -> "..tostring(oldjobid).."\nNew -> "..game.JobId
         print(oldandnewjobid)
         print("Setting new & old jobid to clipboard..")
         setclipboard(oldandnewjobid)
 
         -- Prevent reset on clicking play
         game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("SpawnChar"):FireServer()
-        
+
         -- Teleport to position continuously for the wait time
         local plr = game:GetService("Players").LocalPlayer
 
-        -- Change job
-		local args = {
-			"Farnsworths Worker"
-		}
-		game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
+        -- Function to safely get character and HumanoidRootPart
+        local function getCharacter()
+            local character = plr.Character
+            if not character then
+                character = plr.CharacterAdded:Wait()
+            end
+            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+            return character, humanoidRootPart
+        end
 
-		print('[/] Changed job to Farnsworths Worker')
+        -- Change job to Farnsworths first
+        local args = {"Farnsworths Worker"}
+        game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
+        print('[/] Changed job to Farnsworths Worker')
 
-		task.wait(8)
+        -- Wait for character to load properly
+        local character, humanoidRootPart = getCharacter()
+        task.wait(8)
 
-		plr.Character.HumanoidRootPart.CFrame = CFrame.new(86, 30, -1942)
+        -- First teleport
+        humanoidRootPart.CFrame = CFrame.new(86, 30, -1942)
+        task.wait(3)
 
-		task.wait(3)
-
+        -- Change back to target job
         local args = {"]]..JOB_NAME..[["}
         game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
+        print('[/] Changed job to ]]..JOB_NAME..[[')
 
-		print('[/] Changed job to ]]..JOB_NAME..[[')
-        
-		task.wait(3)
+        task.wait(3)
 
-        -- wait for cahracter to load
-        local character = plr.Character or plr.CharacterAdded:Wait()
+        -- Get fresh character reference after job changes
+        character, humanoidRootPart = getCharacter()
 
-		local startTime = tick()
+        -- Continuous teleport loop with error handling
+        local startTime = tick()
         local endTime = startTime + ]]..REJOIN_WAIT_TIME..[[
-        
+
         local teleportLoop = coroutine.create(function()
             while tick() < endTime do
-                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    plr.Character.HumanoidRootPart.Anchored = true
-                    plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
+                local success, err = pcall(function()
+                    local _, hrp = getCharacter()
+                    hrp.Anchored = true
+                    hrp.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
+                end)
+                if not success then
+                    warn("Teleport loop error: "..tostring(err))
                 end
                 wait(0.1)
             end
         end)
         coroutine.resume(teleportLoop)
-        
+
         -- Wait for the specified time
         while tick() < endTime do
             wait(0.1)
         end
-        plr.Character.HumanoidRootPart.Anchored = false
-        plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
 
-        -- Load main script
-        loadstring(game:HttpGet("]]..scriptUrl..[["))()
+        -- Final position set with error handling
+        pcall(function()
+            local _, hrp = getCharacter()
+            hrp.Anchored = false
+            hrp.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
+        end)
+
+        -- Load main script with error handling
+        local success, err = pcall(function()
+            loadstring(game:HttpGet("]]..scriptUrl..[["))()
+        end)
+        if not success then
+            warn("Failed to load main script: "..tostring(err))
+        end
 
         task.wait(1)
 
-        -- jump to hopefully register as working ingame
-        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
-            plr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
+        -- Jump with error handling
+        pcall(function()
+            local character = plr.Character or plr.CharacterAdded:Wait()
+            if character:FindFirstChild("Humanoid") then
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
 
-        -- toggle auto-farm trhru its actual own function lawl
-        local mainScript = getgenv().TwistAutoFarmMainScript
-        if mainScript and mainScript.toggleAutoFarm then
-            mainScript.toggleAutoFarm()
-        end
+        -- Toggle auto-farm with error handling
+        task.wait(1) -- Extra delay for script to load
+        pcall(function()
+            local mainScript = getgenv().TwistAutoFarmMainScript
+            if mainScript and mainScript.toggleAutoFarm then
+                mainScript.toggleAutoFarm()
+            else
+                -- Fallback if main script didn't load properly
+                warn("Main script not found, attempting to reload...")
+                loadstring(game:HttpGet("]]..scriptUrl..[["))()
+                task.wait(2)
+                if getgenv().TwistAutoFarmMainScript and getgenv().TwistAutoFarmMainScript.toggleAutoFarm then
+                    getgenv().TwistAutoFarmMainScript.toggleAutoFarm()
+                end
+            end
+        end)
 
-		print("[/] Rejoin procedure complete.")
+        print("[/] Rejoin procedure complete.")
     ]]
     
     -- Queue teleport with script
