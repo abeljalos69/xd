@@ -75,13 +75,30 @@ local function queueRejoin()
         
         -- Teleport to position continuously for the wait time
         local plr = game:GetService("Players").LocalPlayer
-        local startTime = tick()
-        local endTime = startTime + ]]..REJOIN_WAIT_TIME..[[
 
         -- Change job
+		local args = {
+			"Farnsworths Worker"
+		}
+		game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
+
+		print('[/] Changed job to Farnsworths Worker')
+
+		task.wait(2)
+
+		plr.Character.HumanoidRootPart.CFrame = CFrame.new(86, 30, -1942)
+
+		task.wait(3)
+
         local args = {"]]..JOB_NAME..[["}
         game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
-        task.wait(1)
+
+		print('[/] Changed job to ]]..JOB_NAME..[[')
+        
+		task.wait(3)
+
+		local startTime = tick()
+        local endTime = startTime + ]]..REJOIN_WAIT_TIME..[[
         
         local teleportLoop = coroutine.create(function()
             while tick() < endTime do
