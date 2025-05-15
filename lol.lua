@@ -93,10 +93,10 @@ local function queueRejoin()
 
         -- Wait for character to load properly
         local character, humanoidRootPart = getCharacter()
-        task.wait(8)
+        task.wait(10)
 
         -- First teleport
-        humanoidRootPart.CFrame = CFrame.new(86, 30, -1942)
+        humanoidRootPart.CFrame = CFrame.new(86, 60, -1942)
         task.wait(3)
 
         -- Change back to target job
