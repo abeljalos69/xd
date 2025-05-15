@@ -1,4 +1,5 @@
--- tppos 18, -10, -1971
+-- tppos 18, -107, -1971
+-- ^^ cash register
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -27,6 +28,26 @@ local startTime = os.time()
 local lastOrderFood = nil
 local lastOrderDrink = nil
 local sameOrderCount = 0
+
+local function serverhop()
+    if httprequest then
+        local servers = {}
+        local req = httprequest({Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true", game.PlaceId)})
+        local body = game.HttpService:JSONDecode(req.Body)
+
+        if body and body.data then
+            for i, v in next, body.data do
+                if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= game.JobId then
+                    table.insert(servers, 1, v.id)
+                end
+            end
+        end
+
+        if #servers > 0 then
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], Players.LocalPlayer)
+        end
+    end
+end
 
 -- Auto-rejoin setup
 local function queueRejoin()
@@ -94,7 +115,8 @@ local function queueRejoin()
     
     -- Queue teleport with script
     queue_on_teleport(rejoinScript)
-    TeleportService:Teleport(game.PlaceId, plr)
+    -- TeleportService:Teleport(game.PlaceId, plr)
+    serverhop()
 end
 
 -- UI Creation
