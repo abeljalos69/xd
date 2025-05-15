@@ -86,6 +86,8 @@ local function queueRejoin()
             return character, humanoidRootPart
         end
 
+        task.wait(5)
+
         -- Change job to Farnsworths first
         local args = {"Farnsworths Worker"}
         game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
@@ -93,7 +95,7 @@ local function queueRejoin()
 
         -- Wait for character to load properly
         local character, humanoidRootPart = getCharacter()
-        task.wait(10)
+        task.wait(5)
 
         -- First teleport
         humanoidRootPart.CFrame = CFrame.new(86, 60, -1942)
