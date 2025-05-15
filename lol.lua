@@ -71,6 +71,11 @@ local function queueRejoin()
         local plr = game:GetService("Players").LocalPlayer
         local startTime = tick()
         local endTime = startTime + ]]..REJOIN_WAIT_TIME..[[
+
+        -- Change job
+        local args = {"]]..JOB_NAME..[["}
+        game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
+        task.wait(1)
         
         local teleportLoop = coroutine.create(function()
             while tick() < endTime do
@@ -89,12 +94,6 @@ local function queueRejoin()
         end
         plr.Character.HumanoidRootPart.Anchored = false
         plr.Character.HumanoidRootPart.CFrame = CFrame.new(]]..REJOIN_POSITION.X..", "..REJOIN_POSITION.Y..", "..REJOIN_POSITION.Z..[[)
-        
-        -- Change job
-        local args = {"]]..JOB_NAME..[["}
-        game:GetService("ReplicatedStorage"):WaitForChild("Remote"):WaitForChild("ChangeJob"):InvokeServer(unpack(args))
-        
-        task.wait(1)
 
         -- Load main script
         loadstring(game:HttpGet("]]..scriptUrl..[["))()
